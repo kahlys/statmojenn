@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>XY Graph</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        #graph {
+            width: 100%;
+            height: 400px;
+            border: 1px solid black;
+        }
+
+        .flex-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .flex-container label {
+            margin-right: 10px;
+        }
+
+        .flex-container input[type="checkbox"] {
+            margin-left: 5px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Mojenn Combo Score</h1>
+
+        <div>
+            <label for="aValue">Value Duo</label>
+            <input type="range" id="aValue" min="0" max="10" value="2">
+            <span id="aValueDisplay">2</span>
+            <br>
+            <label for="bValue">Value Trio</label>
+            <input type="range" id="bValue" min="0" max="10" value="3">
+            <span id="bValueDisplay">3</span>
+            <br>
+            <div class="flex-container">
+                <div id="suiteRangeContainer">
+                    <label for="cValue">Value Suite</label>
+                    <input type="range" id="cValue" min="0" max="10" value="4">
+                    <span id="cValueDisplay">4</span>
+                </div>
+                <div>
+                    <label for="suiteCheckbox">use best card value</label>
+                    <input type="checkbox" id="suiteCheckbox">
+                </div>
+            </div>
+        </div>
+
+        <div class="graph-container">
+            <canvas id="graph"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const aValueInput = document.getElementById('aValue');
+        const aValueDisplay = document.getElementById('aValueDisplay');
+        const bValueInput = document.getElementById('bValue');
+        const bValueDisplay = document.getElementById('bValueDisplay');
+        const cValueInput = document.getElementById('cValue');
+        const cValueDisplay = document.getElementById('cValueDisplay');
+        const suiteCheckbox = document.getElementById('suiteCheckbox');
+        const suiteRangeContainer = document.getElementById('suiteRangeContainer');
+        const ctx = document.getElementById('graph').getContext('2d');
+
+        let chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Duo',
+                    data: [],
+                    borderColor: 'red',
+                    fill: false,
+                }, {
+                    label: 'Trio',
+                    data: [],
+                    borderColor: 'blue',
+                    fill: false,
+                }, {
+                    label: 'Suite',
+                    data: [],
+                    borderColor: 'green',
+                    fill: false,
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        min: 1,
+                        max: 7
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        function updateGraph(a, b, c, useConstantSuite) {
+            const dataA = Array.from({ length: 8 }, (_, i) => ({ x: i, y: a + i + i }));
+            const dataB = Array.from({ length: 8 }, (_, i) => ({ x: i, y: b + i + i + i }));
+            let dataC;
+
+            if (useConstantSuite) {
+                dataC = Array.from({ length: 4 }, (_, i) => {
+                    const x = i + 4;
+                    return { x: x, y: x + x + (x - 1) + (x - 2) + (x - 3) };
+                });
+            } else {
+                dataC = Array.from({ length: 4 }, (_, i) => {
+                    const x = i + 4;
+                    return { x: x, y: c + x + (x - 1) + (x - 2) + (x - 3) };
+                });
+            }
+
+            chart.data.datasets[0].data = dataA;
+            chart.data.datasets[1].data = dataB;
+            chart.data.datasets[2].data = dataC;
+
+            chart.update();
+        }
+
+        // Initial draw
+        updateGraph(parseInt(aValueInput.value), parseInt(bValueInput.value), parseInt(cValueInput.value), suiteCheckbox.checked);
+
+        // Update graph on input change
+        aValueInput.addEventListener('input', () => {
+            const aValue = parseInt(aValueInput.value);
+            aValueDisplay.textContent = aValue;
+            updateGraph(aValue, parseInt(bValueInput.value), parseInt(cValueInput.value), suiteCheckbox.checked);
+        });
+
+        bValueInput.addEventListener('input', () => {
+            const bValue = parseInt(bValueInput.value);
+            bValueDisplay.textContent = bValue;
+            updateGraph(parseInt(aValueInput.value), bValue, parseInt(cValueInput.value), suiteCheckbox.checked);
+        });
+
+        cValueInput.addEventListener('input', () => {
+            const cValue = parseInt(cValueInput.value);
+            cValueDisplay.textContent = cValue;
+            updateGraph(parseInt(aValueInput.value), parseInt(bValueInput.value), cValue, suiteCheckbox.checked);
+        });
+
+        suiteCheckbox.addEventListener('change', () => {
+            const isChecked = suiteCheckbox.checked;
+            cValueInput.disabled = isChecked;
+            updateGraph(parseInt(aValueInput.value), parseInt(bValueInput.value), parseInt(cValueInput.value), isChecked);
+        });
+    </script>
+</body>
+
+</html>
